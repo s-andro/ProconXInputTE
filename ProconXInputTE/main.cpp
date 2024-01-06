@@ -34,6 +34,7 @@ int main(int argc, const char* argv[])
 	struct CommandLineOptions
 	{
 		bool use_x360_layout{false};
+		bool disable_monitor{false};
 	} command_line_options = [](int argc, const char* argv[])
 		{
 			CommandLineOptions ret{};
@@ -41,6 +42,7 @@ int main(int argc, const char* argv[])
 			for (auto&& s : args)
 			{
 				if (s == "--use-x360-layout") { ret.use_x360_layout = true; }
+				else if (s == "--disable-monitor") { ret.disable_monitor = true; }
 				else
 				{
 					std::cerr << "Unknown command line option: " << s << std::endl;
@@ -110,50 +112,57 @@ int main(int argc, const char* argv[])
 	std::cout << "Controller Bridges started." << LF;
 
 	// monitor
-	std::atomic_flag monitor_thread_running{};
-	auto monitor_thread = std::thread([&]()
+	if (command_line_options.disable_monitor)
 	{
-		monitor_thread_running.test_and_set();
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-		while (monitor_thread_running.test_and_set())
+		WaitEscapeOrCtrlC();
+	}
+	else
+	{
+		std::atomic_flag monitor_thread_running{};
+		auto monitor_thread = std::thread([&]()
 		{
-			std::stringstream output;
-
-			output << LF;
-			for (auto&& b : bridges)
+			monitor_thread_running.test_and_set();
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	
+			while (monitor_thread_running.test_and_set())
 			{
-				auto input = b->GetLastInput();              // controller input
-				auto outputIn = b->GetLastOutputIn().Status; // x360 input value
-				auto outputOut = b->GetLastOutputOut();      // sent to controller value
-
-				output << b->GetIndex() << ">";
-				output << "Vib";
-				output << " L:"
-					<< std::setw(3) << static_cast<int>(outputOut.Large.Left) << "/"
-					<< std::setw(3) << static_cast<int>(outputIn.LargeRumble);
-				output << " H:"
-					<< std::setw(3) << static_cast<int>(outputOut.Small.Right) << "/"
-					<< std::setw(3) << static_cast<int>(outputIn.SmallRumble);
-				output << "  In " << InputStatusAsString(input);
+				std::stringstream output;
+	
 				output << LF;
+				for (auto&& b : bridges)
+				{
+					auto input = b->GetLastInput();              // controller input
+					auto outputIn = b->GetLastOutputIn().Status; // x360 input value
+					auto outputOut = b->GetLastOutputOut();      // sent to controller value
+	
+					output << b->GetIndex() << ">";
+					output << "Vib";
+					output << " L:"
+						<< std::setw(3) << static_cast<int>(outputOut.Large.Left) << "/"
+						<< std::setw(3) << static_cast<int>(outputIn.LargeRumble);
+					output << " H:"
+						<< std::setw(3) << static_cast<int>(outputOut.Small.Right) << "/"
+						<< std::setw(3) << static_cast<int>(outputIn.SmallRumble);
+					output << "  In " << InputStatusAsString(input);
+					output << LF;
+				}
+	
+				for (size_t i = 0; i < bridges.size() + 2; ++i)
+				{
+					output << "\x1b[1A"; // cursor move up
+				}
+	
+				std::cout << output.str() << LF;
+	
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			}
-
-			for (size_t i = 0; i < bridges.size() + 2; ++i)
-			{
-				output << "\x1b[1A"; // cursor move up
-			}
-
-			std::cout << output.str() << LF;
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		}
-	});
-
-	WaitEscapeOrCtrlC();
-
-	monitor_thread_running.clear();
-	monitor_thread.join();
+		});
+	
+		WaitEscapeOrCtrlC();
+	
+		monitor_thread_running.clear();
+		monitor_thread.join();
+	}
 
 	std::cout << "Closing controllers..." << LF;
 	bridges.clear();
