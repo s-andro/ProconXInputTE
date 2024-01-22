@@ -52,10 +52,16 @@ namespace ProconXInputTE
 
 			if (options.StickDeadZone != 0)
 			{
-				input.LeftStick.X = std::abs(input.LeftStick.X) < options.StickDeadZone ? 0 : input.LeftStick.X;
-				input.LeftStick.Y = std::abs(input.LeftStick.Y) < options.StickDeadZone ? 0 : input.LeftStick.Y;
-				input.RightStick.X = std::abs(input.RightStick.X) < options.StickDeadZone ? 0 : input.RightStick.X;
-				input.RightStick.Y = std::abs(input.RightStick.Y) < options.StickDeadZone ? 0 : input.RightStick.Y;
+				auto fn = [&](auto& x, auto& y)
+				{
+					if (std::sqrt(x*x + y*y) < options.StickDeadZone)
+					{
+						x = 0;
+						y = 0;
+					}
+				};
+				fn(input.LeftStick.X, input.LeftStick.Y);
+				fn(input.RightStick.X, input.RightStick.Y);
 			}
 
 			X360InputStatus status =
