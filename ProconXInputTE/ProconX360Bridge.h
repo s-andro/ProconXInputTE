@@ -18,6 +18,7 @@ namespace ProconXInputTE
 		struct Options
 		{
 			bool ReplaceButtonsAsX360Layout{};
+			float StickDeadZone{0};
 		};
 
 		template <class T>
