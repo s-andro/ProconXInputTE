@@ -1,6 +1,7 @@
 #include "ProconX360Bridge.h"
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 namespace ProconXInputTE
 {
@@ -33,12 +34,12 @@ namespace ProconXInputTE
 			last_output_.store({Clock::now(), x360Output}, std::memory_order_release);
 		});
 
-		controller_->SetInputStatusCallback([this, use_x360_layout = options.ReplaceButtonsAsX360Layout](const InputStatus& in)
+		controller_->SetInputStatusCallback([this, options](const InputStatus& in)
 		{
 			auto timestamp = Clock::now();
 			InputStatus input = in;
 
-			if (use_x360_layout)
+			if (options.ReplaceButtonsAsX360Layout)
 			{
 				auto a = input.Buttons.AButton;
 				input.Buttons.AButton = input.Buttons.BButton;
@@ -47,6 +48,14 @@ namespace ProconXInputTE
 				auto x = input.Buttons.XButton;
 				input.Buttons.XButton = input.Buttons.YButton;
 				input.Buttons.YButton = x;
+			}
+
+			if (options.StickDeadZone != 0)
+			{
+				input.LeftStick.X = std::abs(input.LeftStick.X) < options.StickDeadZone ? 0 : input.LeftStick.X;
+				input.LeftStick.Y = std::abs(input.LeftStick.Y) < options.StickDeadZone ? 0 : input.LeftStick.Y;
+				input.RightStick.X = std::abs(input.RightStick.X) < options.StickDeadZone ? 0 : input.RightStick.X;
+				input.RightStick.Y = std::abs(input.RightStick.Y) < options.StickDeadZone ? 0 : input.RightStick.Y;
 			}
 
 			X360InputStatus status =
