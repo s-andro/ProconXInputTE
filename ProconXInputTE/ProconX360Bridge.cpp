@@ -99,11 +99,6 @@ namespace ProconXInputTE
 			last_input_sent_.store({timestamp, status}, std::memory_order_release);
 		});
 
-		small_rumble_parameter_.Left.MaxAmplitude *= options.RumbleScale;
-		small_rumble_parameter_.Right.MaxAmplitude *= options.RumbleScale;
-		large_rumble_parameter_.Left.MaxAmplitude *= options.RumbleScale;
-		large_rumble_parameter_.Right.MaxAmplitude *= options.RumbleScale;
-
 		rumble_thread_ = std::thread([this]
 		{
 			auto clock = std::chrono::steady_clock::now();
