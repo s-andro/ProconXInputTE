@@ -19,6 +19,7 @@ namespace ProconXInputTE
 		{
 			bool ReplaceButtonsAsX360Layout{};
 			float StickDeadZone{0};
+			float RumbleScale{1};
 		};
 
 		template <class T>
