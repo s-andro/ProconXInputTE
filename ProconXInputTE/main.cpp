@@ -36,7 +36,6 @@ int main(int argc, const char* argv[])
 		bool use_x360_layout{false};
 		bool disable_monitor{false};
 		float stick_deadzone{0};
-		float rumble_scale{1};
 	} command_line_options = [](int argc, const char* argv[])
 		{
 			CommandLineOptions ret{};
@@ -47,8 +46,6 @@ int main(int argc, const char* argv[])
 				else if (s == "--disable-monitor") { ret.disable_monitor = true; }
 				else if (s == "--stick-deadzone-5") { ret.stick_deadzone = 0.05; }
 				else if (s == "--stick-deadzone-10") { ret.stick_deadzone = 0.10; }
-				else if (s == "--rumble-scale-25") { ret.stick_deadzone = 0.25; }
-				else if (s == "--rumble-scale-50") { ret.stick_deadzone = 0.50; }
 				else
 				{
 					std::cerr << "Unknown command line option: " << s << std::endl;
@@ -88,7 +85,6 @@ int main(int argc, const char* argv[])
 			const auto options = ProconX360Bridge::Options{
 				command_line_options.use_x360_layout,
 				command_line_options.stick_deadzone,
-				command_line_options.rumble_scale,
 			};
 
 			try
